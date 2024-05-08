@@ -1,0 +1,47 @@
+version: '3.8'
+
+networks:
+  demo-servers:
+    driver: bridge
+
+services:
+  app-db:
+    image: postgres:latest
+    container_name: app_postgres_server
+    environment:
+      POSTGRES_USER: pgapp
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    networks:
+      - demo-servers
+    ports:
+      - "5432:5432"
+  flowable-db:
+    image: postgres:latest
+    container_name: flowable_postgres_server
+    environment:
+      POSTGRES_USER: pgflowable
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: flowable
+    networks:
+      - demo-servers
+    ports:
+      - "5433:5432"
+  flowable-ui-app:
+    image: flowable/flowable-ui:6.7.1
+    networks:
+      - demo-servers
+    depends_on:
+      - flowable-db
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_DATASOURCE_DRIVER-CLASS-NAME=org.postgresql.Driver
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://flowable-db:5432/flowable
+      - SPRING_DATASOURCE_USERNAME=pgflowable
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - FLOWABLE_COMMON_APP_IDM-ADMIN_USER=admin
+      - FLOWABLE_COMMON_APP_IDM-ADMIN_PASSWORD=test
+      - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8033
+    ports:
+      - 8081:8080
+      - 8033:8033
